@@ -1,19 +1,26 @@
-//
-//  ContentView.swift
-//  ListBuilder
-//
-//  Created by Brandon Aubrey on 3/28/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject var authService = AuthService()
+
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+            if authService.isLoggedIn() {
+                VStack {
+                    Text("You are Logged in")
+                    Button {
+                        authService.googleSignOut()
+                    } label: {
+                        Text("Log Out")
+                    }
+                }
+            }
+            Button {
+                authService.googleSignIn()
+//                authService.googlePreviousSession()
+            } label: {
+                Text("Login")
+            }
         }
         .padding()
     }
@@ -22,3 +29,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
