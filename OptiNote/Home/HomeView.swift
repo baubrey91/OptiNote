@@ -11,68 +11,82 @@ struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
 
     var body: some View {
-        switch self.viewModel.state {
-        case .error(let error):
-            VStack {
-                ErrorView(errorDescription: error.localizedDescription)
-                
-                Button(Styler.errorTryAgain) {
-                    self.viewModel.googleSignOut()
+        Group {
+            switch self.viewModel.state {
+            case .error(let error):
+                VStack {
+                    ErrorView(errorDescription: error.localizedDescription)
+                    Button(Styler.errorTryAgain) {
+                        self.viewModel.state = .loggedIn
+                    }
+                    .buttonStyle(BlueButton())
                 }
-                .buttonStyle(BlueButton())
-            }
-        case .loading:
-            ProgressView()
-                .onAppear {
-                    self.viewModel.validateUser()
-                }
-        case .loggedIn:
-            NavigationStack {
-                TabView(selection: $viewModel.selectedTab) {
-                    ImportImageView(deepLinkedImage: self.$viewModel.deepLinkedImage)
-                        .tabItem {
-                            Label(
-                                Styler.importText,
-                                systemImage: Styler.importImage
-                            )
-                        }
-                        .tag(Tab.importImageView)
-                    GoogleDriveListView()
-                        .tabItem {
-                            Label(Styler.fileText, systemImage: Styler.fileImage)
-                        }
-                        .tag(Tab.googleDriveListView)
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            self.viewModel.googleSignOut()
-                        }) {
-                            Image(systemName: Styler.signOutImage)
+            case .loading:
+                CustomSpinner()
+                    .onAppear {
+                        self.viewModel.validateUser()
+                    }
+            case .loggedIn:
+                NavigationStack {
+                    TabView(selection: $viewModel.selectedTab) {
+                        ImportImageView(deepLinkedImage: self.$viewModel.deepLinkedImage)
+                            .tabItem {
+                                Label(
+                                    Styler.importText,
+                                    systemImage: Styler.importImage
+                                )
+                            }
+                            .tag(Tab.importImageView)
+                        GoogleDriveListView()
+                            .tabItem {
+                                Label(Styler.fileText, systemImage: Styler.fileImage)
+                            }
+                            .tag(Tab.googleDriveListView)
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: {
+                                self.viewModel.showAlert = true
+                            }) {
+                                Image(systemName: Styler.signOutImage)
+                            }
                         }
                     }
                 }
-            }
-            .onOpenURL { url in
-                self.viewModel.fetchDeepLinkedImage()
-                if url.absoluteString.contains("googledrive") {
-                    self.viewModel.selectedTab = .googleDriveListView
+                .onOpenURL { url in
+                    self.viewModel.fetchDeepLinkedImage()
+                    if url.absoluteString.contains("googledrive") {
+                        self.viewModel.selectedTab = .googleDriveListView
+                    }
                 }
-            }
-            
-        case .loggedOut:
-            Button(action: self.viewModel.googleSignIn) {
-                HStack {
-                    Image(systemName: Styler.signInImage)
-                    Text(Styler.signInText)
-                        .fontWeight(.medium)
+                
+            case .loggedOut:
+                Button(action: self.viewModel.googleSignIn) {
+                    HStack {
+                        Image(systemName: Styler.signInImage)
+                        Text(Styler.signInText)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Styler.backgroundColor)
+                    .cornerRadius(Styler.cornerRadius)
                 }
-                .foregroundColor(.white)
-                .padding()
-                .background(Styler.backgroundColor)
-                .cornerRadius(Styler.cornerRadius)
             }
         }
+        .alert(
+            Styler.logOutConfirmationText,
+            isPresented: self.$viewModel.showAlert,
+            actions: {
+                Button(role: .destructive) {
+                    self.viewModel.googleSignOut()
+                } label: {
+                    Text(Styler.logOutText)
+                }
+            },
+            message: {}
+        )
+
     }
 }
 
@@ -94,6 +108,10 @@ private enum Styler {
     //Previous Notes
     static let signInText = "Sign in with Google"
     static let signInImage = "globe"
+    
+    //Log out
+    static let logOutText = "Log Out"
+    static let logOutConfirmationText = "Are you sure you want to log out of Google?"
     
     
     static let backgroundColor = Color(red: 66/255, green: 133/255, blue: 244/255)

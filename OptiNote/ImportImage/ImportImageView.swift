@@ -19,7 +19,8 @@ struct ImportImageView: View {
         VStack {
             ZStack(alignment: .top) {
                 Color.gray
-                if let uiImage = viewModel.images.first {
+                if let uiImage = viewModel.images.first,
+                   let cgImage = uiImage.cgImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .frame(
@@ -28,7 +29,7 @@ struct ImportImageView: View {
                         )
                         .onAppear {
                             Task {
-                                await viewModel.extractTextFromImage(from: uiImage.cgImage!)
+                                await viewModel.extractTextFromImage(from: cgImage)
                             }
                         }
                 }
@@ -42,7 +43,6 @@ struct ImportImageView: View {
         }
         .alert(isPresented: $viewModel.showingAlert) {
             return .init(title: Text(viewModel.alertType?.alertText ?? Styler.unknownError))
-
         }
         .gesture(viewModel.drawGesture())
         .toolbar {

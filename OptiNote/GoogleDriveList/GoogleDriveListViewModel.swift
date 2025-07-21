@@ -22,14 +22,10 @@ final class GoogleDriveListViewModel: ObservableObject {
     }
     
     var selectedFileText: String {
-        for file in PersistenceManager.shared.getPreviousFiles() ?? [] {
-            print(file.name)
-        }
-        if let fileName = PersistenceManager.shared.getPreviousFiles()?.last?.name {
-            return Styler.fileSelectedText(with: fileName)
-        } else {
+        guard let fileName = PersistenceManager.shared.getPreviousFiles()?.last?.name else {
             return Styler.fileSelectedError
         }
+        return Styler.fileSelectedText(with: fileName)
     }
     
     func setSelectedFile(file: DriveFile) {
@@ -49,10 +45,13 @@ final class GoogleDriveListViewModel: ObservableObject {
                     accessToken: accessToken
                 )
                 await MainActor.run {
+                    self.state = .loaded
                     self.files = fetchedFiles.files.sorted { $0.isFolder && $1.isGoogleDoc }
                 }
             } catch let error {
-                self.state = .error(message: error.localizedDescription)
+                await MainActor.run {
+                    self.state = .error(message: error.localizedDescription)
+                }
             }
         }
     }

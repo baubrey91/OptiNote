@@ -15,6 +15,7 @@ final class HomeViewModel: NSObject, ObservableObject {
     @Published var state: HomeState = .loading
     @Published var selectedTab: Tab
     @Published var deepLinkedImage: UIImage? = nil
+    @Published var showAlert = false
     
     private let additionalScopes = ["https://www.googleapis.com/auth/drive"]
     

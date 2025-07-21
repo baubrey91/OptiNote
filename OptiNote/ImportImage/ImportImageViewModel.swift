@@ -6,11 +6,13 @@ import OptiNoteShared
 enum AlertType {
     case noImage
     case errorCropping
+    case noFileSelected
     
     var alertText: String {
         switch self {
         case .noImage: "Import an image first"
         case .errorCropping: "Error processing image"
+        case .noFileSelected: "Please select a file first"
         }
     }
 }
@@ -49,6 +51,12 @@ final class ImportImageViewModel: ObservableObject {
                 guard let uiImage = self.images.first else {
                     self.showingAlert = true
                     self.alertType = .noImage
+                    return
+                }
+                
+                guard PersistenceManager.shared.getPreviousFiles()?.first != nil else {
+                    self.showingAlert = true
+                    self.alertType = .noFileSelected
                     return
                 }
                 

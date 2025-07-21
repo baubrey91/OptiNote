@@ -106,7 +106,10 @@ public final class NetworkManager: NetworkManagerType {
     
     public func sendData(endpoint: Endpoint, accessToken: String) async throws {
         
-        var request = URLRequest(url: endpoint.url!)
+        guard let url = endpoint.url else {
+            throw NetworkError.badURL
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         do {
             
@@ -194,24 +197,6 @@ public enum Endpoint {
             return try? encoder.encode(updateRequest)
         default: return nil
         }
-    }
-    
-    var request: URLRequest {
-        var request = URLRequest(url: self.url!)
-
-        switch self {
-        case .sendToDocs(let docId, let insertIndex, let text):
-            request.httpMethod = "POST"
-            let location = InsertLocation(index: insertIndex)
-            let insertText = InsertText(location: location, text: text)
-            let updateRequest = Update(requests: [Request(insertText: insertText)])
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            
-        default:
-            break
-        }
-        return request
     }
 }
 
